@@ -2,6 +2,11 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+// 1. ADDED THESE THREE LINES FOR MATH FORMATTING
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css"; 
+// ---------------------------------------------
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 type Message = {
@@ -10,7 +15,6 @@ type Message = {
   image?: string | null;
 };
 
-// --- Custom Copy Button Component ---
 const CodeBlock = ({ children }: { children: string }) => {
   const [copied, setCopied] = useState(false);
 
@@ -51,7 +55,6 @@ export default function FluxSolver() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Smooth scroll that fires whenever messages update
   const scrollToBottom = () => {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -129,15 +132,15 @@ export default function FluxSolver() {
                     <div className="whitespace-pre-wrap">{msg.text}</div>
                   ) : (
                     <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]}
+                      // 2. ADDED THE PLUGINS HERE SO IT CAN RENDER MATH
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      rehypePlugins={[rehypeKatex]}
                       components={{
-                        // Intercept Code Blocks
                         code(props) {
                           const { children, className, node, ...rest } = props;
                           const match = /language-(\w+)/.exec(className || '');
                           const language = match ? match[1] : '';
 
-                          // 1. If it is a chart, render the Graph!
                           if (language === 'chart') {
                             try {
                               const chartData = JSON.parse(String(children));
@@ -159,12 +162,10 @@ export default function FluxSolver() {
                             }
                           }
 
-                          // 2. If it is normal code, render the Copy Button component
                           if (match) {
                             return <CodeBlock>{String(children).replace(/\n$/, '')}</CodeBlock>;
                           }
 
-                          // 3. Inline code
                           return <code className="bg-stone-200 px-1 py-0.5 rounded text-sm text-stone-800" {...rest}>{children}</code>;
                         }
                       }}
