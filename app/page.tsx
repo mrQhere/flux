@@ -1,65 +1,193 @@
-import Image from "next/image";
+"use client";
+import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-export default function Home() {
+type Message = {
+  role: "user" | "ai";
+  text: string;
+  image?: string | null;
+};
+
+export default function FluxSolver() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [image, setImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setImage(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImage(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() && !image) return;
+
+    const currentInput = input;
+    const currentImage = image;
+
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", text: currentInput, image: currentImage },
+    ]);
+    
+    setInput("");
+    setImage(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/solve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ problem: currentInput, image: currentImage }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to generate a response.");
+
+      setMessages((prev) => [...prev, { role: "ai", text: data.solution }]);
+    } catch (err: any) {
+      setMessages((prev) => [...prev, { role: "ai", text: `Error: ${err.message}` }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="flex flex-col min-h-screen bg-[#FDFDF9] text-stone-800 font-sans">
+      
+      <header className="sticky top-0 z-10 flex items-center justify-center py-4 bg-[#FDFDF9]/80 backdrop-blur-sm border-b border-stone-200/50">
+        <h1 className="text-xl font-semibold tracking-wide text-stone-700">Flux</h1>
+      </header>
+
+      <main className="flex-1 overflow-y-auto p-4 w-full max-w-3xl mx-auto pb-32">
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-stone-400 mt-20">
+            <p className="text-lg">How can Flux help you today?</p>
+          </div>
+        ) : (
+          <div className="space-y-8 mt-4">
+            {messages.map((msg, index) => (
+              <div key={index} className="flex flex-col">
+                <span className="text-sm font-semibold mb-1 text-stone-500">
+                  {msg.role === "user" ? "You" : "Flux"}
+                </span>
+                
+                {msg.image && (
+                  <img 
+                    src={msg.image} 
+                    alt="Uploaded context" 
+                    className="max-w-xs rounded-lg border border-stone-200 mb-3 shadow-sm"
+                  />
+                )}
+                
+                {/* CRITICAL FIX: 
+                  If it's the user, render plain text. 
+                  If it's the AI, run it through the Markdown parser so bolding and headers work.
+                */}
+                <div className={`prose prose-stone max-w-none ${msg.role === "user" ? "text-stone-800" : "text-stone-700"}`}>
+                  {msg.role === "user" ? (
+                    <div className="whitespace-pre-wrap">{msg.text}</div>
+                  ) : (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.text}
+                    </ReactMarkdown>
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            {loading && (
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold mb-3 text-stone-500">Flux</span>
+                <div className="w-5 h-5 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin"></div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
       </main>
+
+      <div className="fixed bottom-0 w-full bg-gradient-to-t from-[#FDFDF9] via-[#FDFDF9] to-transparent pt-10 pb-6 px-4">
+        <form 
+          onSubmit={handleSubmit} 
+          className="max-w-3xl mx-auto relative bg-white border border-stone-300 shadow-sm rounded-2xl flex flex-col focus-within:ring-1 focus-within:ring-stone-400 focus-within:border-stone-400 transition-all"
+        >
+          {image && (
+            <div className="relative inline-block w-16 h-16 m-3 mb-0">
+              <img src={image} alt="Preview" className="w-full h-full object-cover rounded-md border border-stone-200" />
+              <button 
+                type="button" 
+                onClick={removeImage}
+                className="absolute -top-2 -right-2 bg-stone-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-stone-700"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          <textarea
+            className="w-full max-h-48 p-4 bg-transparent border-none outline-none resize-none text-stone-800 placeholder-stone-400"
+            rows={1}
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value);
+              e.target.style.height = 'inherit';
+              e.target.style.height = `${e.target.scrollHeight}px`;
+            }}
+            placeholder="Message Flux..."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
+          />
+          
+          <div className="flex justify-between items-center px-3 pb-3">
+            <label className="cursor-pointer text-stone-400 hover:text-stone-600 p-2 rounded-lg hover:bg-stone-100 transition-colors">
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageUpload} 
+                className="hidden" 
+              />
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+              </svg>
+            </label>
+
+            <button
+              type="submit"
+              disabled={loading || (!input.trim() && !image)}
+              className="bg-stone-800 text-white p-2 rounded-lg hover:bg-stone-700 disabled:bg-stone-300 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="19" x2="12" y2="5"></line>
+                <polyline points="5 12 12 5 19 12"></polyline>
+              </svg>
+            </button>
+          </div>
+        </form>
+        <div className="text-center mt-2">
+          <p className="text-xs text-stone-400">Flux can make mistakes. Verify important information.</p>
+        </div>
+      </div>
     </div>
   );
 }
