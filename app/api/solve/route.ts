@@ -25,7 +25,15 @@ export async function POST(req: Request) {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     let result;
-    const systemPrompt = "You are an expert tutor. Provide a step-by-step solution. If relevant, output numerical data so the UI can generate a graph.";
+    
+    // CRITICAL FIX: The updated system prompt that forces the AI to format graphs correctly for Recharts
+    const systemPrompt = `You are an expert tutor. Provide a step-by-step solution. 
+If the user asks for a graph, you MUST output the data as an array of JSON objects inside a code block labeled 'chart'. 
+Example format:
+\`\`\`chart
+[{"x": 0, "y": 10}, {"x": 5, "y": 20}]
+\`\`\`
+Do not put any other text inside the chart code block. Use standard markdown for the rest of your explanation.`;
 
     if (image) {
       // Handle Image + Text
@@ -33,7 +41,7 @@ export async function POST(req: Request) {
       const imagePart = {
         inlineData: {
           data: base64Data,
-          mimeType: "image/jpeg", // ensure this matches your upload type
+          mimeType: "image/jpeg", 
         },
       };
       const fullTextPrompt = `${systemPrompt}\n\nUser Question:\n${problem || "Explain this image."}`;
