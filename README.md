@@ -1,36 +1,23 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Flux: Next-Gen AI Problem Solver 🚀
 
-## Getting Started
+**Live Demo:** [Insert your Vercel Link Here]
 
-First, run the development server:
+Flux is a minimalist, high-performance, multimodal AI assistant designed to solve complex math, science, and logic problems. Built with a focus on speed and user experience, Flux allows users to input text or upload images (like handwritten equations or diagrams) and receives highly accurate, formatted markdown responses.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ Key Features
+* **Multimodal Capabilities:** Processes both standard text inputs and image uploads (OCR & Contextual Vision).
+* **Conversational UI:** A seamless, distraction-free interface inspired by premium AI tools, featuring auto-scrolling, image previews, and real-time loading states.
+* **Markdown Rendering:** Natively supports complex formatting, tables, lists, and bold text for highly readable academic solutions.
+* **High-Speed Processing:** Powered by the lightweight, high-bandwidth Gemini 2.5 Flash model to bypass standard rate limits and deliver answers in milliseconds.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Technical Stack
+* **Frontend:** Next.js (React), Tailwind CSS, React-Markdown.
+* **Backend:** Next.js API Routes (Serverless).
+* **AI Engine:** Google Generative AI SDK (Gemini 2.5 Flash).
+* **Deployment:** Vercel.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🚀 Run Locally
+1. Clone the repository: `git clone https://github.com/mrQhere/flux.git`
+2. Install dependencies: `npm install`
+3. Create a `.env` file in the root directory and add your API key: `GEMINI_API_KEY=your_api_key_here`
+4. Start the server: `npm run dev`
